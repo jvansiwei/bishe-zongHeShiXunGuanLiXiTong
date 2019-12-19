@@ -23,7 +23,6 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="$store.state.user.panduan!='学生'" @click="getMyList()">查询本人发布课题</el-button>
         <el-button v-if="$store.state.user.panduan!='学生'" type="primary" @click="addOrUpdateHandle()">新增</el-button>
         <el-button v-if="$store.state.user.panduan!='学生'" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
         <!-- <el-button v-if="isAuth('generator:proinfo:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
@@ -99,9 +98,8 @@
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="addOrUpdateHandle(scope.row)">修改</el-button>
-          <!-- <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="deleteHandle(scope.row.proId)">删除</el-button> -->
-          <el-button v-if="$store.state.user.panduan=='学生'&&scope.row.proState==0" type="text" size="small" @click="submit(scope.row.proId)">报名</el-button>
+          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row)">修改</el-button>
+          <el-button type="text" size="small" @click="deleteHandle(scope.row.proId)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -114,13 +112,10 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
   </div>
 </template>
 
 <script>
-  import AddOrUpdate from './proinfo-add-or-update'
   export default {
     data () {
       return {
@@ -155,9 +150,6 @@
         addOrUpdateVisible: false
       }
     },
-    components: {
-      AddOrUpdate
-    },
     activated () {
       this.getDataList()
     },
@@ -175,12 +167,12 @@
           }
         }
         this.$http({
-          url: this.$http.adornUrl('/pro/proinfo/list'),
+          url: this.$http.adornUrl('/pro/que/list'),
           method: 'get',
           params: this.$http.adornParams(query)
         }).then(({data}) => {
           if (data && data.code === 0) {
-            if (this.$store.state.user.panduan !== '学生s') {
+            if (this.$store.state.user.panduan !== '学生') {
               this.dataList = data.page.list
             } else {
               this.dataList = []
@@ -194,77 +186,6 @@
           } else {
             this.dataList = []
             this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
-      },
-      // 获取数据列表
-      getMyList () {
-        this.$http({
-          url: this.$http.adornUrl('/pro/proinfo/list/my'),
-          method: 'get',
-          params: this.$http.adornParams()
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            // if (this.$store.state.user.panduan !== '学生') {
-            //   this.dataList = data.page.list
-            // } else {
-            //   this.dataList = []
-            //   for (let i = 0; i < data.page.list.length; i++) {
-            //     if (data.page.list[i].proState + '' !== '0') {
-            //       this.dataList.push(data.page.list[i])
-            //     }
-            //   }
-            // }
-            this.dataList = data.data
-            this.totalPage = this.dataList.length
-          } else {
-            this.dataList = []
-            this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
-      },
-      // 教师处理申报数据
-      getApplyList () {
-        this.$http({
-          url: this.$http.adornUrl('/pro/group/declare/list'),
-          method: 'get',
-          params: this.$http.adornParams()
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            // if (this.$store.state.user.panduan !== '学生') {
-            //   this.dataList = data.page.list
-            // } else {
-            //   this.dataList = []
-            //   for (let i = 0; i < data.page.list.length; i++) {
-            //     if (data.page.list[i].proState + '' !== '0') {
-            //       this.dataList.push(data.page.list[i])
-            //     }
-            //   }
-            // }
-            this.dataList = data.data
-            this.totalPage = this.dataList.length
-          } else {
-            this.dataList = []
-            this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
-      },
-      // 报课题
-      submit (id) {
-        this.$http({
-          url: this.$http.adornUrl('/pro/group/declare'),
-          method: 'get',
-          params: this.$http.adornParams({
-            'proId': id
-          })
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            this.$message.success('报名成功')
-          } else {
-            this.$message.error(data.msg)
           }
           this.dataListLoading = false
         })
@@ -302,7 +223,7 @@
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/pro/proinfo/delete'),
+            url: this.$http.adornUrl('/generator/proinfo/delete'),
             method: 'post',
             data: this.$http.adornData(ids, false)
           }).then(({data}) => {

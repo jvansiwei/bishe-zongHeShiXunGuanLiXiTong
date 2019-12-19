@@ -34,6 +34,15 @@
         placeholder="实训结束时间">
       </el-date-picker>
     </el-form-item>
+    <el-form-item label="平时成绩占比" prop="basePercent">
+      <el-input v-model="dataForm.basePercent" placeholder="平时成绩占比"></el-input>
+    </el-form-item>
+    <el-form-item label="验收成绩占比" prop="checkPercent">
+      <el-input v-model="dataForm.checkPercent" placeholder="验收成绩占比"></el-input>
+    </el-form-item>
+    <el-form-item label="中期检查占比" prop="middlePercent">
+      <el-input v-model="dataForm.middlePercent" placeholder="中期检查成绩占比"></el-input>
+    </el-form-item>
     <!-- <el-form-item label="" prop="createTime">
       <el-input v-model="dataForm.createTime" placeholder=""></el-input>
     </el-form-item> -->
@@ -55,7 +64,10 @@
           practiceName: '',
           signupStartTime: '',
           signupEndTime: '',
-          practiceEndTime: ''
+          practiceEndTime: '',
+          basePercent: '',
+          checkPercent: '',
+          middlePercent: ''
         },
         dataRule: {
           practiceName: [
@@ -100,6 +112,9 @@
                 this.dataForm.signupStartTime = data.data.signupStartTime
                 this.dataForm.signupEndTime = data.data.signupEndTime
                 this.dataForm.practiceEndTime = data.data.practiceEndTime
+                this.dataForm.basePercent = data.data.basePercent
+                this.dataForm.checkPercent = data.data.checkPercent
+                this.dataForm.middlePercent = data.data.middlePercent
               }
             })
           }
@@ -125,7 +140,10 @@
                 'practiceName': this.dataForm.practiceName,
                 'signupStartTime': this.dataForm.signupStartTime,
                 'signupEndTime': this.dataForm.signupEndTime,
-                'practiceEndTime': this.dataForm.practiceEndTime
+                'practiceEndTime': this.dataForm.practiceEndTime,
+                'basePercent': this.dataForm.basePercent * 1,
+                'checkPercent': this.dataForm.checkPercent * 1,
+                'middlePercent': this.dataForm.middlePercent * 1
               })
             }).then(({data}) => {
               if (data && data.code === 0) {

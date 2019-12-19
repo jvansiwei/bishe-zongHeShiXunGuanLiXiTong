@@ -134,7 +134,11 @@
     },
     methods: {
       init (id) {
-        this.dataForm.proId = id.proId || 0
+        if (id) {
+          this.dataForm.proId = id.proId || 0
+        } else {
+          this.dataForm.proId = 0
+        }
         this.visible = true
         this.$nextTick(() => {
           this.$refs['dataForm'].resetFields()
@@ -180,19 +184,21 @@
       dataFormSubmit () {
         this.$refs['dataForm'].validate((valid) => {
           if (valid) {
+            let query = {
+              proId: this.dataForm.proId || undefined,
+              proName: this.dataForm.proName,
+              proState: this.dataForm.proState,
+              proSummary: this.dataForm.proSummary,
+              stuNum: this.dataForm.stuNum,
+              tasks: this.dataForm.tasks
+              // 'createUserId': this.dataForm.createUserId,
+              // 'createTime': this.dataForm.createTime,
+              // 'updateTime': this.dataForm.updateTime
+            }
             this.$http({
               url: this.$http.adornUrl(`/pro/proinfo/${!this.dataForm.proId ? 'save' : 'update'}`),
               method: 'post',
-              data: this.$http.adornData({
-                'proId': this.dataForm.proId || undefined,
-                'proName': this.dataForm.proName,
-                'proSummary': this.dataForm.proSummary,
-                'stuNum': this.dataForm.stuNum,
-                'tasks': this.dataForm.tasks
-                // 'createUserId': this.dataForm.createUserId,
-                // 'createTime': this.dataForm.createTime,
-                // 'updateTime': this.dataForm.updateTime
-              })
+              data: this.$http.adornData(query)
             }).then(({data}) => {
               if (data && data.code === 0) {
                 this.$message({

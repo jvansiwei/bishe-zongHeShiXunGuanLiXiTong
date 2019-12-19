@@ -32,6 +32,7 @@
           <span>课题名称：</span>
           <span v-if="form.proName">{{form.proName}}</span>
           <span v-else>未选报课题</span>
+          <span style="color:blue;cursor:pointer" v-if="form.proId" @click="showInfo">详情</span>
         </el-col>
         <el-col :span="8">
           <span>课题状态：</span>
@@ -54,11 +55,14 @@
         <el-col :span="span">
           <span>任务名：</span>
           <span v-if="item.taskName">{{item.taskName}}</span>
-          <span v-else>暂未分配</span>
+          <span v-if="!item.taskName&&form.leaderUserId != userId">分配任务</span>
+          <span v-if="!item.taskName&&form.leaderUserId == userId" style="color:blue;cursor:pointer" @click="showfenPei(item.memberId)">分配任务</span>
         </el-col>
       </el-row>
     </div>
+    <el-button style="margin-bottom:10px" @click="isShow=!isShow"><span v-if="isShow">关闭邀请列表</span><span v-else>显示邀请列表</span></el-button>
     <el-table
+      v-if="isShow"
       :data="dataList"
       border
       v-loading="dataListLoading"
@@ -133,6 +137,66 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination> -->
+    <el-dialog title="课题详情" :visible.sync="dialog">
+      <el-row>
+        <!-- 教师编号form_keti.createUserId -->
+        <el-col :span="5">
+          <span>课题名称</span>
+        </el-col>
+        <el-col :span="7">
+          <span>{{form_keti.proName}}</span>
+        </el-col>
+        <el-col :span="5">
+          <span>课题人数</span>
+        </el-col>
+        <el-col :span="7">
+          <span>{{form_keti.stuNum}}</span>
+        </el-col>
+        <el-col :span="5">
+          <span>课题概述</span>
+        </el-col>
+        <el-col :span="19">
+          <el-input disabled v-model="form_keti.proSummary" type="textarea" placeholder="概述"></el-input>
+        </el-col>
+      </el-row>
+      <el-row v-for="(item, index) in form_keti.tasks" :key="index">
+        <el-col :span="5">
+            <span>任务{{index+1}}</span>
+        </el-col>
+        <el-col :span="19">
+            <el-input disabled v-model="form_keti.tasks[index].taskName" placeholder="任务名称"></el-input>
+        </el-col>
+        <el-col :span="5">
+            <span>任务{{index+1}}的内容</span>
+        </el-col>
+        <el-col :span="19">
+            <el-input disabled v-model="form_keti.tasks[index].taskDesc" type="textarea" rows="3" placeholder="任务内容"></el-input>
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <!-- <el-button @click="dialog = false">取 消</el-button> -->
+        <el-button type="primary" @click="dialog = false">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="分配任务" :visible.sync="dialog_fenPei">
+      <el-row>
+        <el-col :span="6">选择任务：</el-col>
+        <el-col :span="18">
+          <el-select v-model="taskId" placeholder="请选择">
+            <el-option
+              v-for="item in form_keti.tasks"
+              :key="item.taskId"
+              :label="item.taskName"
+              :value="item.taskId">
+            </el-option>
+          </el-select>
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialog_fenPei = false">取 消</el-button>
+        <el-button type="primary" :disabled="taskId==''" @click="fenPei()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -140,6 +204,11 @@
   export default {
     data () {
       return {
+        dialog: false,
+        dialog_fenPei: false,
+        memberId: '',
+        taskId: '',
+        isShow: false,
         userId: '',
         stuId: '',
         panduan: true,
@@ -155,6 +224,24 @@
           proId: null,
           proName: null,
           state: 0
+        },
+        form_keti: {
+          proId: '',
+          proState: '',
+          proName: '',
+          proSummary: '',
+          stuNum: '',
+          tasks: [{
+            createTime: '',
+            proId: '',
+            taskDesc: '',
+            taskId: '',
+            taskName: '',
+            taskState: ''
+          }]
+          // createUserId: '',
+          // createTime: '',
+          // updateTime: ''
         },
         options: [{
           name: '收到的邀请',
@@ -187,6 +274,37 @@
       }
     },
     methods: {
+      showfenPei (val) {
+        this.memberId = val
+        this.taskId = ''
+        this.dialog_fenPei = true
+      },
+      fenPei () {
+        if (this.taskId + '' === '') {
+          this.$message.success('请选择任务')
+          return
+        }
+        let query = {
+          memberId: this.memberId,
+          taskId: this.taskId
+        }
+        this.$http({
+          url: this.$http.adornUrl('/pro/group/assign/task'),
+          method: 'get',
+          params: this.$http.adornParams(query)
+        }).then(({data}) => {
+          this.dialog_fenPei = false
+          if (data && data.code === 0) {
+            this.$message.success('分配成功')
+            this.getInfo()
+          } else {
+            this.$message.error(data.msg)
+          }
+        })
+      },
+      showInfo () {
+        this.dialog = true
+      },
       // 邀请人进组
       open () {
         this.$prompt('请输入学号', '提示', {
@@ -262,6 +380,24 @@
         }).then(({data}) => {
           if (data && data.code === 0) {
             this.form = data.data
+            if (data.data.proId || data.data.proId + '' === '0') {
+              this.$http({
+                url: this.$http.adornUrl(`/pro/proinfo/info/${this.form.proId}`),
+                method: 'get',
+                params: this.$http.adornParams()
+              }).then(({data}) => {
+                if (data && data.code === 0) {
+                  this.form_keti.proId = data.proInfo.proId
+                  this.form_keti.proState = data.proInfo.proState
+                  this.form_keti.stuNum = data.proInfo.stuNum
+                  this.form_keti.proName = data.proInfo.proName
+                  this.form_keti.proSummary = data.proInfo.proSummary
+                  if (data.proInfo.tasks.length) {
+                    this.form_keti.tasks = data.proInfo.tasks
+                  }
+                }
+              })
+            }
             console.log(this.form)
           } else {
             this.$message.success(data.msg)
@@ -351,7 +487,10 @@
   width: 100%;
   /* height: 300px; */
 }
-.el-row{
+/* .el-row{
   margin: 10px 0;
+} */
+.el-col{
+  margin: 5px 0;
 }
 </style>

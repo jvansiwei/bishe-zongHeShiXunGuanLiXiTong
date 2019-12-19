@@ -2,19 +2,9 @@
   <div class="mod-config">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input style="width:150px" v-model="dataForm.teaName" placeholder="教师姓名" clearable></el-input>
-        <el-input style="width:150px" v-model="dataForm.proName" placeholder="课题名称" clearable></el-input>
-        <el-select v-if="$store.state.user.panduan!='学生'" clearable style="width:150px" v-model="dataForm.proState" placeholder="请选择">
+        <el-select style="width:150px" v-model="state" placeholder="请选择">
           <el-option
-            v-for="item in options1"
-            :key="item.value"
-            :label="item.name"
-            :value="item.value">
-          </el-option>
-        </el-select>
-        <el-select v-else style="width:150px" clearable v-model="dataForm.proState" placeholder="请选择">
-          <el-option
-            v-for="item in options"
+            v-for="item in options_cl"
             :key="item.value"
             :label="item.name"
             :value="item.value">
@@ -23,7 +13,6 @@
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="$store.state.user.panduan!='学生'" @click="getMyList()">查询本人发布课题</el-button>
         <el-button v-if="$store.state.user.panduan!='学生'" type="primary" @click="addOrUpdateHandle()">新增</el-button>
         <el-button v-if="$store.state.user.panduan!='学生'" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
         <!-- <el-button v-if="isAuth('generator:proinfo:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
@@ -52,56 +41,45 @@
         prop="proSummary"
         header-align="center"
         align="center"
-        label="概述">
+        label="小组成员">
+        <template slot-scope="scope">
+          <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+            <span class="shenglue" :title="scope.row.groupMemberList[index].username">{{scope.row.groupMemberList[index].username}}</span><br>
+          </div>
+        </template>
       </el-table-column>
       <el-table-column
         prop="createUserId"
         header-align="center"
         align="center"
-        label="创建者id">
-      </el-table-column>
-      <el-table-column
-        prop="createTime"
-        header-align="center"
-        align="center"
-        label="创建时间">
+        label="成员学号">
         <template slot-scope="scope">
-          <span class="shenglue" :title="scope.row.createTime" v-if="scope.row.createTime">{{scope.row.createTime.slice(0, 10)}}</span>
-          <span v-else>-</span>
+          <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+            <span class="shenglue" :title="scope.row.groupMemberList[index].stuId">{{scope.row.groupMemberList[index].stuId}}</span><br>
+          </div>
         </template>
       </el-table-column>
       <el-table-column
-        prop="updateTime"
+        prop="createUserId"
         header-align="center"
         align="center"
-        label="更新时间">
+        label="班级">
         <template slot-scope="scope">
-          <span class="shenglue" :title="scope.row.updateTime" v-if="scope.row.updateTime">{{scope.row.updateTime.slice(0, 10)}}</span>
-          <span v-else>-</span>
+          <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+            <span class="shenglue" :title="scope.row.groupMemberList[index].stuClass">{{scope.row.groupMemberList[index].stuClass}}</span><br>
+          </div>
         </template>
       </el-table-column>
       <el-table-column
-        prop="proState"
-        header-align="center"
-        align="center"
-        label="状态">
-        <!-- label="0：未发布；1：已发布；2：已分配" -->
-        <template slot-scope="scope">
-          <span v-if="scope.row.proState==0">未发布</span>
-          <span v-if="scope.row.proState==1">已发布</span>
-          <span v-if="scope.row.proState==2">已分配</span>
-        </template>
-      </el-table-column>
-      <el-table-column
+        v-if="state==0"
         fixed="right"
         header-align="center"
         align="center"
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="addOrUpdateHandle(scope.row)">修改</el-button>
-          <!-- <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="deleteHandle(scope.row.proId)">删除</el-button> -->
-          <el-button v-if="$store.state.user.panduan=='学生'&&scope.row.proState==0" type="text" size="small" @click="submit(scope.row.proId)">报名</el-button>
+          <el-button type="text" size="small" @click="chuli(scope.row.groupMemberList[0].groupId, 1)">同意</el-button>
+          <el-button type="text" size="small" @click="chuli(scope.row.groupMemberList[0].groupId, 2)">拒绝</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -114,21 +92,29 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
   </div>
 </template>
 
 <script>
-  import AddOrUpdate from './proinfo-add-or-update'
   export default {
     data () {
       return {
+        state: 0,
         dataForm: {
           proState: '',
           teaName: '',
           proName: ''
         },
+        options_cl: [{
+          name: '未处理',
+          value: 0
+        }, {
+          name: '选报成功',
+          value: 1
+        }, {
+          name: '选报失败',
+          value: 2
+        }],
         options: [{
           name: '未发布',
           value: 0
@@ -155,94 +141,26 @@
         addOrUpdateVisible: false
       }
     },
-    components: {
-      AddOrUpdate
-    },
     activated () {
       this.getDataList()
+    },
+    watch: {
+      state () {
+        this.getDataList()
+      }
     },
     methods: {
       // 获取数据列表
       getDataList () {
         this.dataListLoading = true
-        let query = {
-          'page': this.pageIndex,
-          'limit': this.pageSize
-        }
-        for (let i in this.dataForm) {
-          if (this.dataForm[i] || this.dataForm[i] === 0) {
-            query[i] = this.dataForm[i]
-          }
-        }
-        this.$http({
-          url: this.$http.adornUrl('/pro/proinfo/list'),
-          method: 'get',
-          params: this.$http.adornParams(query)
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            if (this.$store.state.user.panduan !== '学生s') {
-              this.dataList = data.page.list
-            } else {
-              this.dataList = []
-              for (let i = 0; i < data.page.list.length; i++) {
-                if (data.page.list[i].proState + '' !== '0') {
-                  this.dataList.push(data.page.list[i])
-                }
-              }
-            }
-            this.totalPage = data.page.totalCount
-          } else {
-            this.dataList = []
-            this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
-      },
-      // 获取数据列表
-      getMyList () {
-        this.$http({
-          url: this.$http.adornUrl('/pro/proinfo/list/my'),
-          method: 'get',
-          params: this.$http.adornParams()
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            // if (this.$store.state.user.panduan !== '学生') {
-            //   this.dataList = data.page.list
-            // } else {
-            //   this.dataList = []
-            //   for (let i = 0; i < data.page.list.length; i++) {
-            //     if (data.page.list[i].proState + '' !== '0') {
-            //       this.dataList.push(data.page.list[i])
-            //     }
-            //   }
-            // }
-            this.dataList = data.data
-            this.totalPage = this.dataList.length
-          } else {
-            this.dataList = []
-            this.totalPage = 0
-          }
-          this.dataListLoading = false
-        })
-      },
-      // 教师处理申报数据
-      getApplyList () {
         this.$http({
           url: this.$http.adornUrl('/pro/group/declare/list'),
           method: 'get',
-          params: this.$http.adornParams()
+          params: this.$http.adornParams({
+            'state': this.state
+          })
         }).then(({data}) => {
           if (data && data.code === 0) {
-            // if (this.$store.state.user.panduan !== '学生') {
-            //   this.dataList = data.page.list
-            // } else {
-            //   this.dataList = []
-            //   for (let i = 0; i < data.page.list.length; i++) {
-            //     if (data.page.list[i].proState + '' !== '0') {
-            //       this.dataList.push(data.page.list[i])
-            //     }
-            //   }
-            // }
             this.dataList = data.data
             this.totalPage = this.dataList.length
           } else {
@@ -252,21 +170,41 @@
           this.dataListLoading = false
         })
       },
-      // 报课题
-      submit (id) {
-        this.$http({
-          url: this.$http.adornUrl('/pro/group/declare'),
-          method: 'get',
-          params: this.$http.adornParams({
-            'proId': id
-          })
-        }).then(({data}) => {
-          if (data && data.code === 0) {
-            this.$message.success('报名成功')
-          } else {
-            this.$message.error(data.msg)
+      // 处理申报
+      chuli (id, state) {
+        this.$confirm('此操作将处理学生的申报课题请求, 是否确定？', '处理申报信息', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          let query = {
+            'groupId': id,
+            'state': state
           }
-          this.dataListLoading = false
+          console.log(query)
+          this.$http({
+            url: this.$http.adornUrl('/pro/group/declare/handle'),
+            method: 'post',
+            data: this.$http.adornData(query)
+          }).then(({data}) => {
+            if (data && data.code === 0) {
+              this.$message({
+                message: '操作成功',
+                type: 'success',
+                duration: 1500,
+                onClose: () => {
+                  this.getDataList()
+                }
+              })
+            } else {
+              this.$message.error(data.msg)
+            }
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消操作'
+          })
         })
       },
       // 每页数
@@ -302,7 +240,7 @@
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/pro/proinfo/delete'),
+            url: this.$http.adornUrl('/generator/proinfo/delete'),
             method: 'post',
             data: this.$http.adornData(ids, false)
           }).then(({data}) => {
