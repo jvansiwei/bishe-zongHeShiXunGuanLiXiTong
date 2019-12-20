@@ -12,12 +12,12 @@
           <el-checkbox v-for="role in roleList" :key="role.roleId" :label="role.roleId">{{ role.roleName }}</el-checkbox>
         </el-checkbox-group> -->
       </el-form-item>
-      <el-form-item v-if="panduan_juese=='学生'" label="学号" prop="stuId">
+      <el-form-item v-if="panduan_juese=='学生'" label="*学号" prop="stuId">
         <el-input v-model="dataForm.stuId" placeholder="学号"></el-input>
-      </el-form-item><el-form-item v-if="panduan_juese=='学生'" label="班级" prop="stuClass">
-        <el-input v-model="dataForm.stuClass" placeholder="学号"></el-input>
+      </el-form-item><el-form-item v-if="panduan_juese=='学生'" label="*班级" prop="stuClass">
+        <el-input v-model="dataForm.stuClass" placeholder="班级"></el-input>
       </el-form-item>
-      <el-form-item v-if="panduan_juese=='教师'" label="教师工号" prop="teaId">
+      <el-form-item v-if="panduan_juese=='教师'" label="*教师工号" prop="teaId">
         <el-input v-model="dataForm.teaId" placeholder="教师工号"></el-input>
       </el-form-item>
       <el-form-item label="用户名" prop="userName">

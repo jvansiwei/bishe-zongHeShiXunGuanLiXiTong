@@ -59,7 +59,7 @@
         </el-table-column>
         <el-table-column prop="name" label="操作" width="120" @click="submit">
           <template slot-scope="scope">
-            <el-button v-if="$store.state.user.panduan!='学生'" type="text" @click="tijiao(true,scope.row)">详情</el-button>
+            <el-button type="text" @click="tijiao(true,scope.row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -73,11 +73,15 @@
           @click="submit()"
         >提交周报</el-button>
         <el-button
-          v-else
           class="filter-item"
           type="primary"
           @click="panduan=!panduan"
         >返回</el-button>
+      </div>
+      <div style="margin: 10px 0">
+        <span>分数:</span>
+        <span v-if="form_text.scores">{{form_text.scores}}</span>
+        <span v-else>暂未打分</span>
       </div>
       <div style="margin: 10px 0">
         <span>周报次数:</span>

@@ -1,41 +1,86 @@
 <template>
   <div class="app-container">
-    <!-- <div class="mg-b">
-      <el-input
-        v-model="condition.name"
-        placeholder="通知名称"
-        style="width: 200px"
-        class="filter-item"
-        suffix-icon="el-icon-search"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-button
-        class="filter-item"
-        type="primary"
-        icon="el-icon-search"
-        @click="handleFilter"
-      >搜索</el-button>
-      <el-button
-        class="filter-item"
-        type="primary"
-        @click="pushs(false, false)"
-      >发布赛事</el-button>
-      <el-button
-        class="filter-item fr"
-        type="primary"
-        :disabled="infos.length==0"
-        @click="pushs(false, false)"
-      >删除数据</el-button>
-    </div> -->
-    <div v-if="panduan">
-      <div class="mg-b">
+    <div v-if="panduan&&!panduan_xuesheng">
+      <!-- <div class="mg-b">
         <el-button
           class="filter-item"
           type="primary"
           @click="tijiao(false)"
         >提交周报</el-button>
+      </div> -->
+      <el-table
+        :data="dataList"
+        border
+        v-loading="dataListLoading"
+        style="width: 100%;">
+        <el-table-column
+          type="selection"
+          header-align="center"
+          align="center"
+          width="50">
+        </el-table-column>
+        <el-table-column
+          prop="proName"
+          header-align="center"
+          align="center"
+          label="课题名称">
+        </el-table-column>
+        <el-table-column
+          prop="proSummary"
+          header-align="center"
+          align="center"
+          label="小组成员">
+          <template slot-scope="scope">
+            <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+              <span class="shenglue" :title="scope.row.groupMemberList[index].username">{{scope.row.groupMemberList[index].username}}</span><br>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="createUserId"
+          header-align="center"
+          align="center"
+          label="成员学号">
+          <template slot-scope="scope">
+            <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+              <span class="shenglue" :title="scope.row.groupMemberList[index].stuId">{{scope.row.groupMemberList[index].stuId}}</span><br>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="createUserId"
+          header-align="center"
+          align="center"
+          label="班级">
+          <template slot-scope="scope">
+            <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+              <span class="shenglue" :title="scope.row.groupMemberList[index].stuClass">{{scope.row.groupMemberList[index].stuClass}}</span><br>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          header-align="center"
+          align="center"
+          width="150"
+          label="操作">
+          <template slot-scope="scope">
+            <div v-for="(item, index) in scope.row.groupMemberList" :key="index">
+              <span style="cursor:pointer;color:blue" @click="getZhoubaoList(scope.row.groupMemberList[index].memberId)">查看</span><br>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <div v-if="panduan&&panduan_xuesheng">
+      <div class="mg-b">
+        <el-button
+          class="filter-item"
+          type="primary"
+          @click="panduan_xuesheng=!panduan_xuesheng"
+        >返回</el-button>
       </div>
-      <el-table :data="dataList" border style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table :data="dataList1" border style="width: 100%">
         <el-table-column
           type="selection"
           width="55"
@@ -64,16 +109,33 @@
         </el-table-column>
       </el-table>
     </div>
-    <div v-else>
+    <div v-if="!panduan&&panduan_xuesheng">
       <div class="mg-b">
         <el-button
-          v-if="form_text.memberId"
           class="filter-item"
           type="primary"
-          @click="submit()"
-        >提交周报</el-button>
+          @click="panduan=!panduan"
+        >返回</el-button>
         <el-button
-          v-else
+          class="filter-item"
+          type="primary"
+          @click="dafen()"
+        >打分</el-button>
+      </div>
+      <div style="margin: 10px 0">
+        <span>周报次数:</span>
+        <span>{{form_text.weeklyNum}}</span>
+      </div>
+      <div style="margin: 10px 0">
+        <span>分数:</span>
+        <span v-if="form_text.scores">{{form_text.scores}}</span>
+        <span v-else>暂未打分</span>
+      </div>
+      <texts :curValue="form_text.weeklyContent" @input="newContent"></texts>
+    </div>
+    <!-- <div v-if="!panduan&&!panduan_xuesheng">
+      <div class="mg-b">
+        <el-button
           class="filter-item"
           type="primary"
           @click="panduan=!panduan"
@@ -92,17 +154,7 @@
         />
       </div>
       <texts :curValue="form_text.weeklyContent" @input="newContent"></texts>
-    </div>
-    <!-- <el-dialog
-      title="提示"
-      :visible.sync="dialogVisible"
-      width="30%">
-      <add />
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
-      </span>
-    </el-dialog> -->
+    </div> -->
   </div>
 </template>
 
@@ -112,10 +164,11 @@ export default {
   components: { texts },
   data () {
     return {
+      memberId: '',
       initContent: '', // 默认值
       dialogVisible: true,
-      panduan: true,
-      memberId: '',
+      panduan: true, // 判断是列表页还是周报页
+      panduan_xuesheng: false, // 判断是否是学生
       listQuery: {
         page: 1,
         limit: 20,
@@ -132,6 +185,9 @@ export default {
         coach: ''
       },
       dataList: [],
+      dataList1: [],
+      dataListLoading: false,
+      dataListLoading1: false,
       form: {
         createTime: '',
         groupId: '',
@@ -154,40 +210,73 @@ export default {
     }
   },
   created () {
-    this.getInfo()
     this.getDataList()
   },
-  methods: {
-      // 获取数据列表
-    getInfo () {
-      this.dataListLoading = true
-      this.$http({
-        url: this.$http.adornUrl('/pro/group/info'),
-        method: 'get',
-        params: this.$http.adornParams()
-      }).then(({data}) => {
-        if (data && data.code === 0) {
-          this.form = data.data
-          for (let i = 0; i < this.form.members.length; i++) {
-            if (this.form.members[i].stuId + '' === JSON.parse(localStorage.getItem('userInfo')).stuId) {
-              this.memberId = this.form.members[i].memberId
-            }
+  watch: {
+    panduan () {
+      if (this.panduan_xuesheng) {
+        this.$http({
+          url: this.$http.adornUrl('/pro/weekly/list'),
+        // 查询选报成功的学生的周报列表
+          method: 'get',
+          params: this.$http.adornParams({
+            'memberId': this.memberId
+          })
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.dataList1 = data.data
+          } else {
+            this.dataList1 = []
+          // this.totalPage = 0
           }
-        } else {
-          this.$message.success(data.msg)
-          // this.getDataList()
+        })
+      }
+    }
+  },
+  methods: {
+    dafen () {
+      this.$prompt('请输入分数', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => {
+        let query = {
+          weeklyId: this.form_text.weeklyId,
+          score: value
         }
-        this.dataListLoading = false
+        if (value > 100 || value < 0) {
+          this.$message.success('分数不能小于0或大于100')
+          return
+        }
+        this.$http({
+          url: this.$http.adornUrl('/pro/weekly/scoring'),
+          method: 'get',
+          params: this.$http.adornParams(query)
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.$message.success('打分成功')
+            this.panduan = !this.panduan
+          } else {
+            this.$message.success(data.msg)
+            // this.getDataList()
+          }
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消输入'
+        })
       })
     },
     // 获取数据列表
     getDataList () {
       this.dataListLoading = true
       this.$http({
-        url: this.$http.adornUrl('/pro/weekly/list'),
+        // url: this.$http.adornUrl('/pro/weekly/list'),
+        // 查询选报成功的学生列表
+        url: this.$http.adornUrl('/pro/group/declare/list'),
         method: 'get',
         params: this.$http.adornParams({
-          'type': this.type
+          'state': 1
         })
       }).then(({data}) => {
         if (data && data.code === 0) {
@@ -197,6 +286,28 @@ export default {
           this.totalPage = 0
         }
         this.dataListLoading = false
+      })
+    },
+    // 获取数据列表
+    getZhoubaoList (val) {
+      this.memberId = val
+      this.panduan_xuesheng = !this.panduan_xuesheng
+      this.dataListLoading1 = true
+      this.$http({
+        url: this.$http.adornUrl('/pro/weekly/list'),
+        // 查询选报成功的学生的周报列表
+        method: 'get',
+        params: this.$http.adornParams({
+          'memberId': val
+        })
+      }).then(({data}) => {
+        if (data && data.code === 0) {
+          this.dataList1 = data.data
+        } else {
+          this.dataList1 = []
+          // this.totalPage = 0
+        }
+        this.dataListLoading1 = false
       })
     },
     tijiao (pd, val) {

@@ -1,32 +1,8 @@
 <template>
   <div class="mod-config">
-    <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
+    <el-form v-if="$store.state.user.panduan=='学生'" :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
       <el-form-item>
-        <el-input style="width:150px" v-model="dataForm.teaName" placeholder="教师姓名" clearable></el-input>
-        <el-input style="width:150px" v-model="dataForm.proName" placeholder="课题名称" clearable></el-input>
-        <el-select v-if="$store.state.user.panduan!='学生'" clearable style="width:150px" v-model="dataForm.proState" placeholder="请选择">
-          <el-option
-            v-for="item in options1"
-            :key="item.value"
-            :label="item.name"
-            :value="item.value">
-          </el-option>
-        </el-select>
-        <el-select v-else style="width:150px" clearable v-model="dataForm.proState" placeholder="请选择">
-          <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.name"
-            :value="item.value">
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="$store.state.user.panduan!='学生'" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="$store.state.user.panduan!='学生'" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
-        <!-- <el-button v-if="isAuth('generator:proinfo:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="isAuth('generator:proinfo:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button> -->
+        <el-button v-if="$store.state.user.panduan=='学生'" type="primary" @click="tiwen()">提问</el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -42,34 +18,53 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="proName"
+        prop="stuName"
         header-align="center"
         align="center"
-        label="课题名称">
+        label="学生姓名"
+        width="100">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.stuName">{{scope.row.stuName}}</span>
+        </template>
       </el-table-column>
       <el-table-column
-        prop="proSummary"
+        prop="teaName"
         header-align="center"
         align="center"
-        label="概述">
+        label="老师姓名"
+        width="100">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.teaName">{{scope.row.teaName}}</span>
+        </template>
       </el-table-column>
       <el-table-column
-        prop="createUserId"
+        prop="questionContent"
         header-align="center"
-        align="center"
-        label="创建者id">
+        label="问题内容">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.questionContent">{{scope.row.questionContent}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="answerContent"
+        header-align="center"
+        label="答复内容">
+        <template slot-scope="scope">
+          <span v-if="scope.row.answerContent" class="shenglue" :title="scope.row.answerContent">{{scope.row.answerContent}}</span>
+          <el-tag type="danger" v-else>暂未答复</el-tag>
+        </template>
       </el-table-column>
       <el-table-column
         prop="createTime"
         header-align="center"
         align="center"
-        label="创建时间">
+        label="提出日期">
         <template slot-scope="scope">
-          <span class="shenglue" :title="scope.row.createTime" v-if="scope.row.createTime">{{scope.row.createTime.slice(0, 10)}}</span>
+          <span class="shenglue" :title="scope.row.createTime" v-if="scope.row.createTime">{{scope.row.createTime}}</span>
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         prop="updateTime"
         header-align="center"
         align="center"
@@ -78,32 +73,32 @@
           <span class="shenglue" :title="scope.row.updateTime" v-if="scope.row.updateTime">{{scope.row.updateTime.slice(0, 10)}}</span>
           <span v-else>-</span>
         </template>
-      </el-table-column>
-      <el-table-column
+      </el-table-column> -->
+      <!-- <el-table-column
         prop="proState"
         header-align="center"
         align="center"
         label="状态">
-        <!-- label="0：未发布；1：已发布；2：已分配" -->
         <template slot-scope="scope">
           <span v-if="scope.row.proState==0">未发布</span>
           <span v-if="scope.row.proState==1">已发布</span>
           <span v-if="scope.row.proState==2">已分配</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
+        v-if="$store.state.user.panduan != '学生'"
         fixed="right"
         header-align="center"
         align="center"
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="addOrUpdateHandle(scope.row)">修改</el-button>
-          <el-button type="text" size="small" @click="deleteHandle(scope.row.proId)">删除</el-button>
+          <span v-if="scope.row.answerContent">已答复</span>
+          <el-button v-else type="text" size="small" @click="dialog_dafu(scope.row.queId)">答复</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
+    <!-- <el-pagination
       @size-change="sizeChangeHandle"
       @current-change="currentChangeHandle"
       :current-page="pageIndex"
@@ -111,7 +106,18 @@
       :page-size="pageSize"
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
-    </el-pagination>
+    </el-pagination> -->
+    <el-dialog title="回答问题" :visible.sync="dialog">
+      <el-form :model="form">
+        <el-form-item label="答复内容：" label-width="120px">
+          <el-input v-model="form.ansContent" type="textarea" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialog = false">取 消</el-button>
+        <el-button type="primary" :disabled="form.ansContent.length==0" title="请输入内容" @click="dafu()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -119,6 +125,11 @@
   export default {
     data () {
       return {
+        dialog: false,
+        queId: '',
+        form: {
+          ansContent: ''
+        },
         dataForm: {
           proState: '',
           teaName: '',
@@ -154,17 +165,83 @@
       this.getDataList()
     },
     methods: {
+      dialog_tiwen (val) {
+        this.queId = val
+        this.dialog = true
+      },
+      tiwen () {
+        this.$prompt('请输入问题', '提出问题', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        }).then(({ value }) => {
+          // let query = {
+          //   queContent: value
+          // }
+          if (value) {
+            this.$http({
+              url: this.$http.adornUrl('/pro/que/save'),
+              method: 'post',
+              data: this.$http.adornStr(value)
+            }).then(({data}) => {
+              if (data && data.code === 0) {
+                this.$message({
+                  message: '操作成功',
+                  type: 'success',
+                  duration: 1000,
+                  onClose: () => {
+                    this.getDataList()
+                  }
+                })
+              } else {
+                this.$message.error(data.msg)
+              }
+            })
+          } else {
+            this.$message.success('请输入问题')
+          }
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '取消输入'
+          })
+        })
+      },
+      dialog_dafu (val) {
+        this.queId = val
+        this.dialog = true
+      },
+      dafu (val, id) {
+        this.$http({
+          url: this.$http.adornUrl('/pro/que/ans/' + this.queId),
+          method: 'post',
+          data: this.$http.adornStr(this.form.ansContent)
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.dialog = false
+            this.$message({
+              message: '操作成功',
+              type: 'success',
+              duration: 1000,
+              onClose: () => {
+                this.getDataList()
+              }
+            })
+          } else {
+            this.$message.error(data.msg)
+          }
+        })
+      },
       // 获取数据列表
       getDataList () {
         this.dataListLoading = true
-        let query = {
-          'page': this.pageIndex,
-          'limit': this.pageSize
+        let val = 1
+        if (this.$store.state.user.panduan !== '学生') {
+          val = 0
         }
-        for (let i in this.dataForm) {
-          if (this.dataForm[i] || this.dataForm[i] === 0) {
-            query[i] = this.dataForm[i]
-          }
+        let query = {
+          // 'page': this.pageIndex,
+          // 'limit': this.pageSize,
+          'isStu': val
         }
         this.$http({
           url: this.$http.adornUrl('/pro/que/list'),
@@ -172,20 +249,19 @@
           params: this.$http.adornParams(query)
         }).then(({data}) => {
           if (data && data.code === 0) {
-            if (this.$store.state.user.panduan !== '学生') {
-              this.dataList = data.page.list
-            } else {
-              this.dataList = []
-              for (let i = 0; i < data.page.list.length; i++) {
-                if (data.page.list[i].proState + '' !== '0') {
-                  this.dataList.push(data.page.list[i])
-                }
-              }
-            }
-            this.totalPage = data.page.totalCount
+            // if (this.$store.state.user.panduan !== '学生') {
+            //   this.dataList = data.data
+            // } else {
+            //   this.dataList = []
+            //   for (let i = 0; i < data.data.length; i++) {
+            //     if (data.data[i].proState + '' !== '0') {
+            //       this.dataList.push(data.data[i])
+            //     }
+            //   }
+            // }
+            this.dataList = data.data
           } else {
             this.dataList = []
-            this.totalPage = 0
           }
           this.dataListLoading = false
         })

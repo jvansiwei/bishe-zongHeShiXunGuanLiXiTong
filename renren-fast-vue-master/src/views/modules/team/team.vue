@@ -15,6 +15,14 @@
       <el-form-item>
         <!-- <el-button @click="getDataList()">查询</el-button> -->
         <el-button @click="add()">创建团队</el-button>
+        <el-select filterable v-model="userId1" placeholder="请选择">
+          <el-option
+            v-for="item in table"
+            :key="item.userId"
+            :label="item.username"
+            :value="item.stuId">
+          </el-option>
+        </el-select>
         <el-button @click="open()">邀请</el-button>
         <el-button v-if="form.leaderUserId == userId" @click="deleteinfo()" title="只有队长登录才会显示删除按钮">删除团队</el-button>
         <!-- <el-button v-if="isAuth('generator:proinfo:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
@@ -204,12 +212,14 @@
   export default {
     data () {
       return {
+        table: [],
         dialog: false,
         dialog_fenPei: false,
         memberId: '',
         taskId: '',
         isShow: false,
         userId: '',
+        userId1: '',
         stuId: '',
         panduan: true,
         span: 8,
@@ -265,6 +275,7 @@
     activated () {
       this.userId = JSON.parse(localStorage.getItem('userInfo')).userId
       this.stuId = JSON.parse(localStorage.getItem('userInfo')).stuId
+      this.getAll()
       this.getInfo()
       this.getDataList()
     },
@@ -274,6 +285,30 @@
       }
     },
     methods: {
+      qiehuan (val, shuzu, ziduan1, ziduan2) {
+        for (let i = 0; i < shuzu.length; i++) {
+          if (shuzu[i][ziduan1] + '' === val + '') {
+            return shuzu[i][ziduan2]
+          }
+        }
+      },
+      // 获取学生和老师列表
+      getAll () {
+        let query = {
+          roleId: ''
+        }
+        this.$http({
+          url: this.$http.adornUrl('/sys/user/all'),
+          method: 'get',
+          params: this.$http.adornParams(query)
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.table = data.data
+          } else {
+            this.table = []
+          }
+        })
+      },
       showfenPei (val) {
         this.memberId = val
         this.taskId = ''
@@ -307,27 +342,18 @@
       },
       // 邀请人进组
       open () {
-        this.$prompt('请输入学号', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消'
-        }).then(({ value }) => {
-          this.$http({
-            url: this.$http.adornUrl('/pro/group/apply'),
-            method: 'get',
-            params: this.$http.adornParams({
-              'userId': value
-            })
-          }).then(({data}) => {
-            if (data && data.code === 0) {
-              this.$message.success('邀请成功')
-            } else {
-            }
+        this.$http({
+          url: this.$http.adornUrl('/pro/group/apply'),
+          method: 'get',
+          params: this.$http.adornParams({
+            'userId': this.userId1
           })
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '取消输入'
-          })
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.$message.success('邀请成功')
+          } else {
+            this.$message.success(data.msg)
+          }
         })
       },
       // 创建团队

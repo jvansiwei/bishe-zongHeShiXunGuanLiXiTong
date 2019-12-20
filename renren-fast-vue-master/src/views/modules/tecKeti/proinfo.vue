@@ -6,7 +6,7 @@
         <el-input style="width:150px" v-model="dataForm.proName" placeholder="课题名称" clearable></el-input>
         <el-select v-if="$store.state.user.panduan!='学生'" clearable style="width:150px" v-model="dataForm.proState" placeholder="请选择">
           <el-option
-            v-for="item in options1"
+            v-for="item in options"
             :key="item.value"
             :label="item.name"
             :value="item.value">
@@ -14,7 +14,7 @@
         </el-select>
         <el-select v-else style="width:150px" clearable v-model="dataForm.proState" placeholder="请选择">
           <el-option
-            v-for="item in options"
+            v-for="item in options1"
             :key="item.value"
             :label="item.name"
             :value="item.value">
@@ -47,18 +47,27 @@
         header-align="center"
         align="center"
         label="课题名称">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.proName">{{ scope.row.proName }}</span>
+        </template>
       </el-table-column>
       <el-table-column
         prop="proSummary"
         header-align="center"
         align="center"
         label="概述">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.proSummary">{{ scope.row.proSummary }}</span>
+        </template>
       </el-table-column>
       <el-table-column
         prop="createUserId"
         header-align="center"
         align="center"
-        label="创建者id">
+        label="创建者">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="qiehuan(scope.row.createUserId, table, 'userId' ,'username')" v-if="scope.row.createUserId">{{ qiehuan(scope.row.createUserId, table, 'userId' ,'username')}}</span>
+        </template>
       </el-table-column>
       <el-table-column
         prop="createTime"
@@ -101,7 +110,7 @@
         <template slot-scope="scope">
           <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="addOrUpdateHandle(scope.row)">修改</el-button>
           <!-- <el-button v-if="$store.state.user.panduan!='学生'" type="text" size="small" @click="deleteHandle(scope.row.proId)">删除</el-button> -->
-          <el-button v-if="$store.state.user.panduan=='学生'&&scope.row.proState==0" type="text" size="small" @click="submit(scope.row.proId)">报名</el-button>
+          <el-button v-if="$store.state.user.panduan=='学生'&&scope.row.proState==1" type="text" size="small" @click="submit(scope.row.proId)">报名</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -124,6 +133,7 @@
   export default {
     data () {
       return {
+        table: [],
         dataForm: {
           proState: '',
           teaName: '',
@@ -159,9 +169,34 @@
       AddOrUpdate
     },
     activated () {
+      this.getAll()
       this.getDataList()
     },
     methods: {
+      qiehuan (val, shuzu, ziduan1, ziduan2) {
+        for (let i = 0; i < shuzu.length; i++) {
+          if (shuzu[i][ziduan1] + '' === val + '') {
+            return shuzu[i][ziduan2]
+          }
+        }
+      },
+      // 获取学生和老师列表
+      getAll () {
+        let query = {
+          roleId: ''
+        }
+        this.$http({
+          url: this.$http.adornUrl('/sys/user/all'),
+          method: 'get',
+          params: this.$http.adornParams(query)
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.table = data.data
+          } else {
+            this.table = []
+          }
+        })
+      },
       // 获取数据列表
       getDataList () {
         this.dataListLoading = true

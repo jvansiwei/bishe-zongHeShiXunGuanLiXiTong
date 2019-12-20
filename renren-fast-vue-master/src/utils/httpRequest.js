@@ -72,5 +72,13 @@ http.adornData = (data = {}, openDefultdata = true, contentType = 'json') => {
   data = openDefultdata ? merge(defaults, data) : data
   return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data)
 }
+// 传递字符串类型
+http.adornStr = (data = '', openDefultdata = true, contentType = 'json') => {
+  // var defaults = {
+  //   't': new Date().getTime()
+  // }
+  // data = data
+  return contentType === 'json' ? data : data
+}
 
 export default http

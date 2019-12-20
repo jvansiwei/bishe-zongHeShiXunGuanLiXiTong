@@ -112,13 +112,13 @@
         },
         dataRule: {
           stuNum: [
-            { required: true, message: '', trigger: 'blur' }
+            { required: true, message: '请输入课题名称', trigger: 'blur' }
           ],
           proName: [
-            { required: true, message: '', trigger: 'blur' }
+            { required: true, message: '请输入课题人数', trigger: 'blur' }
           ],
           proSummary: [
-            { required: true, message: '', trigger: 'blur' }
+            { required: true, message: '请输入课题概述', trigger: 'blur' }
           ]
           // createUserId: [
           //   { required: true, message: '创建者id不能为空', trigger: 'blur' }
@@ -187,13 +187,15 @@
             let query = {
               proId: this.dataForm.proId || undefined,
               proName: this.dataForm.proName,
-              proState: this.dataForm.proState,
               proSummary: this.dataForm.proSummary,
               stuNum: this.dataForm.stuNum,
               tasks: this.dataForm.tasks
               // 'createUserId': this.dataForm.createUserId,
               // 'createTime': this.dataForm.createTime,
               // 'updateTime': this.dataForm.updateTime
+            }
+            if (this.dataForm.proId) {
+              query.proState = this.dataForm.proState
             }
             this.$http({
               url: this.$http.adornUrl(`/pro/proinfo/${!this.dataForm.proId ? 'save' : 'update'}`),
