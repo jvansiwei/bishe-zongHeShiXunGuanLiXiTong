@@ -1,11 +1,11 @@
 <template>
   <div class="mod-config">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
-      <el-form-item>
+      <!-- <el-form-item>
         <el-input v-model="dataForm.key" placeholder="参数名" clearable></el-input>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
-        <el-button @click="getDataList()">查询</el-button>
+        <!-- <el-button @click="getDataList()">查询</el-button> -->
         <el-button v-if="isAuth('generator:syspractice:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
         <el-button v-if="isAuth('generator:syspractice:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
       </el-form-item>
@@ -66,6 +66,16 @@
         <template slot-scope="scope">
           <span class="shenglue" :title="scope.row.practiceEndTime" v-if="scope.row.practiceEndTime">{{scope.row.practiceEndTime.slice(0, 10)}}</span>
           <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="practiceEndTime"
+        header-align="center"
+        align="center"
+        label="状态">
+        <template slot-scope="scope">
+          <span class="shenglue" :title="scope.row.practiceEndTime" v-if="scope.row.state==0">进行中</span>
+          <span v-else>已结束</span>
         </template>
       </el-table-column>
       <!-- <el-table-column

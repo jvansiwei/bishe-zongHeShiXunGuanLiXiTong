@@ -35,13 +35,20 @@
       </el-date-picker>
     </el-form-item>
     <el-form-item label="平时成绩占比" prop="basePercent">
-      <el-input v-model="dataForm.basePercent" placeholder="平时成绩占比"></el-input>
+      <el-input v-if="!panduan" v-model="dataForm.basePercent" type="number" placeholder="平时成绩占比(%)"></el-input>
+      <span v-else>{{dataForm.basePercent}}%</span>
     </el-form-item>
     <el-form-item label="验收成绩占比" prop="checkPercent">
-      <el-input v-model="dataForm.checkPercent" placeholder="验收成绩占比"></el-input>
+      <el-input v-if="!panduan" v-model="dataForm.checkPercent" type="number" placeholder="验收成绩占比(%)"></el-input>
+      <span v-else>{{dataForm.checkPercent}}%</span>
     </el-form-item>
     <el-form-item label="中期检查占比" prop="middlePercent">
-      <el-input v-model="dataForm.middlePercent" placeholder="中期检查成绩占比"></el-input>
+      <el-input v-if="!panduan" v-model="dataForm.middlePercent" type="number" placeholder="中期检查成绩占比(%)"></el-input>
+      <span v-else>{{dataForm.middlePercent}}%</span>
+    </el-form-item>
+    <el-form-item v-if="panduan" label="是否结束" prop="middlePercent">
+      <el-radio v-model="dataForm.state" label="0">进行中</el-radio>
+      <el-radio v-model="dataForm.state" label="1">结束</el-radio>
     </el-form-item>
     <!-- <el-form-item label="" prop="createTime">
       <el-input v-model="dataForm.createTime" placeholder=""></el-input>
@@ -59,6 +66,7 @@
     data () {
       return {
         visible: false,
+        panduan: false,
         dataForm: {
           practiceId: 0,
           practiceName: '',
@@ -97,6 +105,12 @@
       },
       init (id) {
         this.dataForm.practiceId = id || 0
+        if (id) {
+          this.panduan = true
+        } else {
+          this.panduan = false
+        }
+        this.dataForm.state = '0'
         this.visible = true
         this.$nextTick(() => {
           this.$refs['dataForm'].resetFields()
@@ -115,6 +129,7 @@
                 this.dataForm.basePercent = data.data.basePercent
                 this.dataForm.checkPercent = data.data.checkPercent
                 this.dataForm.middlePercent = data.data.middlePercent
+                this.dataForm.state = data.data.state + ''
               }
             })
           }
@@ -132,6 +147,10 @@
               this.$message.error('选报结束时间不能超过实训结束时间')
               return
             }
+            if (this.dataForm.basePercent * 1 + this.dataForm.checkPercent * 1 + this.dataForm.middlePercent * 1 !== 100) {
+              this.$message.error('平时成绩占比、验收成绩占比和中期检查成绩占比之和应等于100')
+              return
+            }
             this.$http({
               url: this.$http.adornUrl(`/sys/practice/${!this.dataForm.practiceId ? 'save' : 'update'}`),
               method: 'post',
@@ -143,7 +162,8 @@
                 'practiceEndTime': this.dataForm.practiceEndTime,
                 'basePercent': this.dataForm.basePercent * 1,
                 'checkPercent': this.dataForm.checkPercent * 1,
-                'middlePercent': this.dataForm.middlePercent * 1
+                'middlePercent': this.dataForm.middlePercent * 1,
+                'state': this.dataForm.state * 1
               })
             }).then(({data}) => {
               if (data && data.code === 0) {

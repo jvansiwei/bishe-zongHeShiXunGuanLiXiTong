@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <!-- <div class="mg-b">
+    <!-- <div style="margin-bottom:15px">
       <el-input
         v-model="condition.name"
         placeholder="通知名称"
@@ -28,7 +28,7 @@
       >删除数据</el-button>
     </div> -->
     <div v-if="panduan">
-      <div class="mg-b">
+      <div style="margin-bottom:15px">
         <el-button
           class="filter-item"
           type="primary"
@@ -65,7 +65,7 @@
       </el-table>
     </div>
     <div v-else>
-      <div class="mg-b">
+      <div style="margin-bottom:15px">
         <el-button
           v-if="form_text.memberId"
           class="filter-item"
