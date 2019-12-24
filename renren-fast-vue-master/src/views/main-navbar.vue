@@ -37,9 +37,10 @@
         </el-submenu> -->
         <el-menu-item class="site-navbar__avatar" index="3">
           <el-dropdown :show-timeout="0" placement="bottom">
-            <!-- <span class="el-dropdown-link">
-              <img src="~@/assets/img/avatar.png" :alt="userName">{{ userName }}
-            </span> -->
+            <span class="el-dropdown-link">
+              <!-- <img src="~@/assets/img/avatar.png" :alt="userName"> -->
+              {{ userName }}
+            </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="updateInfoHandle()">修改信息</el-dropdown-item>
               <el-dropdown-item @click.native="updatePasswordHandle()">修改密码</el-dropdown-item>
