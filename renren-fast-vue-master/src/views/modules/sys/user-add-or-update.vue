@@ -4,7 +4,7 @@
     :close-on-click-modal="false"
     :visible.sync="visible">
     <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="80px">
-      <el-form-item label="角色" size="mini" prop="roleIdList">
+      <el-form-item v-if="dataForm.id" label="角色" size="mini" prop="roleIdList">
         <el-radio-group v-model="roleIdList">
           <el-radio v-for="role in roleList" :key="role.roleId" :label="role.roleId">{{ role.roleName }}</el-radio>
         </el-radio-group>
@@ -135,7 +135,7 @@
     methods: {
       init (id) {
         // this.dataForm.userName = ''
-        // this.dataForm.password = ''
+        this.dataForm.password = ''
         this.dataForm.id = id || 0
         this.$http({
           url: this.$http.adornUrl('/sys/role/select'),
@@ -145,11 +145,12 @@
           this.roleList = data && data.code === 0 ? data.list : []
           if (this.roleList.length) {
             console.log(localStorage.getItem('roleIdList'))
-            if (localStorage.getItem('roleIdList') && localStorage.getItem('roleIdList') !== 0 + '') {
-              this.roleIdList = localStorage.getItem('roleIdList') * 1
-            } else {
-              this.roleIdList = this.roleList[0] * 1
-            }
+            // if (localStorage.getItem('roleIdList') && localStorage.getItem('roleIdList') !== 0 + '') {
+            //   this.roleIdList = localStorage.getItem('roleIdList') * 1
+            // } else {
+            //   this.roleIdList = this.roleList[0] * 1
+            // }
+            this.roleIdList = ''
           }
         }).then(() => {
           this.visible = true
