@@ -215,7 +215,7 @@
           params: this.$http.adornParams(query)
         }).then(({data}) => {
           if (data && data.code === 0) {
-            if (this.$store.state.user.panduan !== '学生s') {
+            if (this.$store.state.user.panduan !== '学生') {
               this.dataList = data.page.list
             } else {
               this.dataList = []

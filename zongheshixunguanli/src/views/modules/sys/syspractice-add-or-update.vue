@@ -47,8 +47,10 @@
       <span v-else>{{dataForm.middlePercent}}%</span>
     </el-form-item>
     <el-form-item v-if="panduan" label="是否结束" prop="middlePercent">
-      <el-radio v-model="dataForm.state" label="0">进行中</el-radio>
-      <el-radio v-model="dataForm.state" label="1">结束</el-radio>
+      <el-radio-group v-model="state">
+        <el-radio :label="0">进行中</el-radio>
+        <el-radio :label="1">结束</el-radio>
+      </el-radio-group>
     </el-form-item>
     <!-- <el-form-item label="" prop="createTime">
       <el-input v-model="dataForm.createTime" placeholder=""></el-input>
@@ -67,6 +69,7 @@
       return {
         visible: false,
         panduan: false,
+        state: 0,
         dataForm: {
           practiceId: 0,
           practiceName: '',
@@ -79,16 +82,16 @@
         },
         dataRule: {
           practiceName: [
-            { required: true, message: '实训活动名称不能为空', trigger: 'blur' }
+            { required: true, message: '不能为空', trigger: 'blur' }
           ],
           signupStartTime: [
-            { required: true, message: '选报开始时间不能为空', trigger: 'blur' }
+            { required: true, message: '不能为空', trigger: 'blur' }
           ],
           signupEndTime: [
-            { required: true, message: '选报结束时间不能为空', trigger: 'blur' }
+            { required: true, message: '不能为空', trigger: 'blur' }
           ],
           practiceEndTime: [
-            { required: true, message: '实训结束时间不能为空', trigger: 'blur' }
+            { required: true, message: '不能为空', trigger: 'blur' }
           ]
         }
       }
@@ -110,7 +113,7 @@
         } else {
           this.panduan = false
         }
-        this.dataForm.state = '0'
+        this.state = 0
         this.visible = true
         this.$nextTick(() => {
           this.$refs['dataForm'].resetFields()
@@ -129,7 +132,7 @@
                 this.dataForm.basePercent = data.data.basePercent
                 this.dataForm.checkPercent = data.data.checkPercent
                 this.dataForm.middlePercent = data.data.middlePercent
-                this.dataForm.state = data.data.state + ''
+                this.state = data.data.state * 1
               }
             })
           }
@@ -163,7 +166,7 @@
                 'basePercent': this.dataForm.basePercent * 1,
                 'checkPercent': this.dataForm.checkPercent * 1,
                 'middlePercent': this.dataForm.middlePercent * 1,
-                'state': this.dataForm.state * 1
+                'state': this.state * 1
               })
             }).then(({data}) => {
               if (data && data.code === 0) {

@@ -1,32 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- <div style="margin-bottom:15px">
-      <el-input
-        v-model="condition.name"
-        placeholder="通知名称"
-        style="width: 200px"
-        class="filter-item"
-        suffix-icon="el-icon-search"
-        @keyup.enter.native="handleFilter"
-      />
-      <el-button
-        class="filter-item"
-        type="primary"
-        icon="el-icon-search"
-        @click="handleFilter"
-      >搜索</el-button>
-      <el-button
-        class="filter-item"
-        type="primary"
-        @click="pushs(false, false)"
-      >发布赛事</el-button>
-      <el-button
-        class="filter-item fr"
-        type="primary"
-        :disabled="infos.length==0"
-        @click="pushs(false, false)"
-      >删除数据</el-button>
-    </div> -->
     <div v-if="panduan">
       <div style="margin-bottom:15px">
         <el-button
@@ -57,7 +30,7 @@
             <span v-else>暂未打分</span>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="操作" width="120" @click="submit">
+        <el-table-column prop="name" label="操作" width="120">
           <template slot-scope="scope">
             <el-button type="text" @click="tijiao(true,scope.row)">详情</el-button>
           </template>
@@ -67,11 +40,11 @@
     <div v-else>
       <div style="margin-bottom:15px">
         <el-button
-          v-if="form_text.memberId"
+          v-if="!form_text.memberId"
           class="filter-item"
           type="primary"
           @click="submit()"
-        >提交周报</el-button>
+        >提交</el-button>
         <el-button
           class="filter-item"
           type="primary"
@@ -97,16 +70,6 @@
       </div>
       <texts :curValue="form_text.weeklyContent" @input="newContent"></texts>
     </div>
-    <!-- <el-dialog
-      title="提示"
-      :visible.sync="dialogVisible"
-      width="30%">
-      <add />
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
-      </span>
-    </el-dialog> -->
   </div>
 </template>
 

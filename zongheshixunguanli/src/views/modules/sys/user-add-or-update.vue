@@ -4,7 +4,7 @@
     :close-on-click-modal="false"
     :visible.sync="visible">
     <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="80px">
-      <el-form-item v-if="dataForm.id" label="角色" size="mini" prop="roleIdList">
+      <el-form-item v-if="!dataForm.id" label="角色" size="mini" prop="roleIdList">
         <el-radio-group v-model="roleIdList">
           <el-radio v-for="role in roleList" :key="role.roleId" :label="role.roleId">{{ role.roleName }}</el-radio>
         </el-radio-group>
@@ -20,8 +20,8 @@
       <el-form-item v-if="panduan_juese=='教师'" label="*教师工号" prop="teaId">
         <el-input v-model="dataForm.teaId" placeholder="教师工号"></el-input>
       </el-form-item>
-      <el-form-item label="用户名" prop="userName">
-        <el-input v-model="dataForm.userName" placeholder="登录帐号"></el-input>
+      <el-form-item label="用户名" prop="username">
+        <el-input v-model="dataForm.username" placeholder="登录帐号"></el-input>
       </el-form-item>
       <el-form-item label="密码" prop="password" :class="{ 'is-required': !dataForm.id }">
         <el-input v-model="dataForm.password" type="password" placeholder="密码"></el-input>
@@ -90,7 +90,7 @@
         roleIdList: '',
         dataForm: {
           id: 0,
-          userName: '',
+          username: '',
           password: '',
           comfirmPassword: '',
           salt: '',
@@ -103,21 +103,24 @@
           status: 1
         },
         dataRule: {
-          userName: [
-            { required: true, message: '用户名不能为空', trigger: 'blur' }
+          username: [
+            { required: true, message: '.', trigger: 'blur' },
+            { required: true, message: '.', trigger: 'blur' }
           ],
           password: [
+            { required: true, message: '.', trigger: 'blur' },
             { validator: validatePassword, trigger: 'blur' }
           ],
           comfirmPassword: [
+            { required: true, message: '.', trigger: 'blur' },
             { validator: validateComfirmPassword, trigger: 'blur' }
           ],
           email: [
-            { required: true, message: '邮箱不能为空', trigger: 'blur' },
+            { required: true, message: '.', trigger: 'blur' },
             { validator: validateEmail, trigger: 'blur' }
           ],
           mobile: [
-            { required: true, message: '手机号不能为空', trigger: 'blur' },
+            { required: true, message: '.', trigger: 'blur' },
             { validator: validateMobile, trigger: 'blur' }
           ]
         }
@@ -134,7 +137,7 @@
     },
     methods: {
       init (id) {
-        // this.dataForm.userName = ''
+        // this.dataForm.username = ''
         this.dataForm.password = ''
         this.dataForm.id = id || 0
         this.$http({
@@ -165,7 +168,7 @@
               params: this.$http.adornParams()
             }).then(({data}) => {
               if (data && data.code === 0) {
-                this.dataForm.userName = data.user.username
+                this.dataForm.username = data.user.username
                 this.dataForm.salt = data.user.salt
                 this.dataForm.email = data.user.email
                 this.dataForm.mobile = data.user.mobile
@@ -197,28 +200,26 @@
             return
           }
         }
+        if (!this.dataForm.id && !this.roleIdList && this.roleIdList + '' !== '0') {
+          this.$message.error('请选择角色')
+        }
         this.dataForm.roleIdList = []
         this.dataForm.roleIdList.push(this.roleIdList)
         localStorage.setItem('roleIdList', this.roleIdList)
         console.log(this.dataForm)
+        let query = {}
+        for (let i in this.dataForm) {
+          if (this.dataForm[i] || this.dataForm[i] + '' === '0') {
+            query[i] = this.dataForm[i]
+          }
+        }
+        query.userId = this.dataForm.id || undefined
         this.$refs['dataForm'].validate((valid) => {
           if (valid) {
             this.$http({
               url: this.$http.adornUrl(`/sys/user/${!this.dataForm.id ? 'save' : 'update'}`),
               method: 'post',
-              data: this.$http.adornData({
-                'userId': this.dataForm.id || undefined,
-                'username': this.dataForm.userName,
-                'password': this.dataForm.password,
-                'salt': this.dataForm.salt,
-                'email': this.dataForm.email,
-                'mobile': this.dataForm.mobile,
-                'stuClass': this.dataForm.stuClass,
-                'stuId': this.dataForm.stuId,
-                'teaId': this.dataForm.teaId,
-                'roleIdList': this.dataForm.roleIdList,
-                'status': this.dataForm.status
-              })
+              data: this.$http.adornData(query)
             }).then(({data}) => {
               if (data && data.code === 0) {
                 this.$message({

@@ -147,9 +147,9 @@
                   duration: 1500,
                   onClose: () => {
                     this.visible = false
-                    this.$nextTick(() => {
-                      this.mainTabs = []
-                    })
+                    // this.$nextTick(() => {
+                    //   this.mainTabs = []
+                    // })
                   }
                 })
               } else {
